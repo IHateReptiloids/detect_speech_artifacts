@@ -24,7 +24,8 @@ class SSPNetVC(torch.utils.data.Dataset):
 
                 name = fields[0]
                 wav, sr = torchaudio.load(data_path / f'{name}.wav')
-                wav = torchaudio.functional.resample(wav, sr, target_sr).squeeze()
+                if sr != target_sr:
+                    wav = torchaudio.functional.resample(wav, sr, target_sr).squeeze()
                 assert wav.dim() == 1
 
                 labels = []
