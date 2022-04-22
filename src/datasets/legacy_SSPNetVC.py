@@ -10,7 +10,7 @@ import wget
 URL = 'http://www.dcs.gla.ac.uk/~vincia/datavocalizations/vocalizationcorpus.zip'
 
 
-class SSPNetVC(torch.utils.data.Dataset):
+class LegacySSPNetVC(torch.utils.data.Dataset):
     def __init__(self, root='data/ssp', csv=None, sr=32_000):
         super().__init__()
         self.root = Path(root)
