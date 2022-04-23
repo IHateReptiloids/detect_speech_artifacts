@@ -9,7 +9,7 @@ URL = 'http://www.dcs.gla.ac.uk/~vincia/datavocalizations/vocalizationcorpus.zip
 
 
 class SSPNetVC(torch.utils.data.Dataset):
-    def __init__(self, aligner, data_path='data/ssp/data',
+    def __init__(self, data_path='data/ssp/data',
                  labels_path='data/ssp/labels.txt', target_sr=32_000):
         super().__init__()
         data_path = Path(data_path)
@@ -33,7 +33,7 @@ class SSPNetVC(torch.utils.data.Dataset):
                     type_, start, end = fields[i:i + 3]
                     assert type_ in ('filler', 'laughter')
                     labels.append((type_, float(start), float(end)))
-                self._data.append((wav, aligner(wav, labels)))
+                self._data.append((wav, labels))
 
     def __getitem__(self, ind):
         return self._data[ind]
