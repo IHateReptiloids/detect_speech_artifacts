@@ -45,7 +45,7 @@ class UnsupervisedFineTuningTrainer:
             self.validation(val_loader)
             print('-' * 100)
             if checkpoint_dir is not None and i % checkpoint_freq == 0:
-                checkpoint_path = checkpoint_dir / f'{i}.pth'
+                checkpoint_path = checkpoint_dir / f'{self._num_iter}.pth'
                 print(f'Saving checkpoint to {checkpoint_path}')
                 torch.save(self.state_dict(), checkpoint_path)
                 wandb.save(str(checkpoint_path))
