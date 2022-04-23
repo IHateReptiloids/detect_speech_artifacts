@@ -25,11 +25,13 @@ class UnsupervisedFineTuningTrainer:
     def load_state_dict(self, sd):
         self.model.load_state_dict(sd['model'])
         self.opt.load_state_dict(sd['opt'])
+        self._num_iter = sd['num_iter']
     
     def state_dict(self):
         sd = OrderedDict()
         sd['model'] = self.model.state_dict()
         sd['opt'] = self.opt.state_dict()
+        sd['num_iter'] = self._num_iter
         return sd
 
     def train_loop(self, num_epochs, train_loader, val_loader,
