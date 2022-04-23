@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -37,3 +37,7 @@ class Wav2Vec2Pretrained(torch.nn.Module):
             end_emb_idx = (int(event.end * 16_000) + 120) // 320
             labels[start_emb_idx:end_emb_idx] = event.label_idx
         return labels
+    
+    @staticmethod
+    def idx2sec(start: int, end: int) -> Tuple[float, float]:
+        return (0.02 * start, 0.02 * (end - 1) + 0.025)

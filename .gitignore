@@ -1,4 +1,5 @@
 # Project
+checkpoints/
 data/audioset/val/
 data/ssp/data
 data/ssp/labels.*
