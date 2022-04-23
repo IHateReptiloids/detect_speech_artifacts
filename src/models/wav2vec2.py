@@ -13,6 +13,7 @@ class Wav2Vec2Pretrained(torch.nn.Module):
         if size not in ('base', 'large'):
             raise ValueError('Invalid size')
         model_name = f'facebook/wav2vec2-{size}'
+        self.num_features = 768 if size == 'base' else 1024
         self.model = Wav2Vec2Model.from_pretrained(model_name)
         self.processor = Wav2Vec2Processor.from_pretrained(model_name)
 
@@ -30,7 +31,7 @@ class Wav2Vec2Pretrained(torch.nn.Module):
         if wav.ndim != 1:
             raise ValueError('Expected one channel wav')
         num_emb = 1 + (len(wav) - 400) // 320
-        labels = torch.zeros((num_emb,), dtype=torch.int)
+        labels = torch.zeros((num_emb,), dtype=torch.long)
         for event in events:
             start_emb_idx = (int(event.start * 16_000) + 120) // 320
             end_emb_idx = (int(event.end * 16_000) + 120) // 320
