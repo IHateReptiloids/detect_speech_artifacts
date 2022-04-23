@@ -1,0 +1,5 @@
+name: ssp_net_vc
+args:
+  data_path: 'data/ssp/data'
+  labels_path: 'data/ssp/train_labels.txt'
+  target_sr: 16000

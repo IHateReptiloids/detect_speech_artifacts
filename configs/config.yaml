@@ -1,0 +1,16 @@
+defaults:
+- model: wav2vec2
+- opt: adam
+- train_ds: ssp_net_vc
+- val_ds: ssp_net_vc
+- _self_
+
+hydra:
+  run:
+    dir: '.'
+
+batch_size: 16
+checkpoint_dir: "checkpoints/${model.name}-${train_ds.name}"
+num_epochs: 10
+seed: 8228
+wandb_log_freq: 100
