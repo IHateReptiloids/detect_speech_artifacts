@@ -22,6 +22,9 @@ class SSPNetVCEvent:
             return False
         return self.label_idx == other.label_idx and\
                self.start == other.start and self.end == other.end
+    
+    def __repr__(self):
+        return ' '.join([self.label, str(self.start), str(self.end)])
 
 
 class SSPNetVC(torch.utils.data.Dataset):
