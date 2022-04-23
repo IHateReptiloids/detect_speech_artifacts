@@ -8,6 +8,22 @@ import wget
 URL = 'http://www.dcs.gla.ac.uk/~vincia/datavocalizations/vocalizationcorpus.zip'
 
 
+class SSPNetVCEvent:
+    def __init__(self, label: str, start: float, end: float):
+        if label not in ('filler', 'laughter'):
+            raise ValueError('Invalid label')
+        self.label = label
+        self.label_idx = 1 if label == 'filler' else 2
+        self.start = start
+        self.end = end
+    
+    def __eq__(self, other):
+        if not isinstance(other, SSPNetVCEvent):
+            return False
+        return self.label_idx == other.label_idx and\
+               self.start == other.start and self.end == other.end
+
+
 class SSPNetVC(torch.utils.data.Dataset):
     def __init__(self, data_path='data/ssp/data',
                  labels_path='data/ssp/labels.txt', target_sr=32_000):
@@ -28,12 +44,11 @@ class SSPNetVC(torch.utils.data.Dataset):
                     wav = torchaudio.functional.resample(wav, sr, target_sr).squeeze()
                 assert wav.dim() == 1
 
-                labels = []
+                events = []
                 for i in range(4, len(fields), 3):
-                    type_, start, end = fields[i:i + 3]
-                    assert type_ in ('filler', 'laughter')
-                    labels.append((type_, float(start), float(end)))
-                self._data.append((wav, labels))
+                    label, start, end = fields[i:i + 3]
+                    events.append(SSPNetVCEvent(label, float(start), float(end)))
+                self._data.append((wav, events))
 
     def __getitem__(self, ind):
         return self._data[ind]
