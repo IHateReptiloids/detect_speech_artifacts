@@ -52,8 +52,13 @@ def main(cfg: DictConfig):
                                              collate_fn=trainer.collate_fn)
 
     wandb.watch((model,), log='all', log_freq=cfg.wandb_log_freq)
+    if cfg.wandb_file_name is not None and cfg.wandb_run_path is not None:
+        f = wandb.restore(cfg.wandb_file_name, cfg.wandb_run_path,
+                          cfg.checkpoint_dir)
+        trainer.load_state_dict(torch.load(f.name, map_location=device))
+        f.close()
     trainer.train_loop(cfg.num_epochs, train_loader, val_loader,
-                       cfg.checkpoint_dir)
+                       cfg.checkpoint_dir, cfg.checkpoint_freq)
 
 
 if __name__ == '__main__':

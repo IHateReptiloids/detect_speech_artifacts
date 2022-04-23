@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from pathlib import Path
 
 import torch
@@ -20,9 +21,19 @@ class UnsupervisedFineTuningTrainer:
         labels = torch.stack([self.model[0].align(wav, label)
                               for wav, label in zip(wavs, labels)], dim=0)
         return wavs, labels
+    
+    def load_state_dict(self, sd):
+        self.model.load_state_dict(sd['model'])
+        self.opt.load_state_dict(sd['opt'])
+    
+    def state_dict(self):
+        sd = OrderedDict()
+        sd['model'] = self.model.state_dict()
+        sd['opt'] = self.opt.state_dict()
+        return sd
 
     def train_loop(self, num_epochs, train_loader, val_loader,
-                   checkpoint_dir=None):
+                   checkpoint_dir, checkpoint_freq):
         if checkpoint_dir is not None:
             checkpoint_dir = Path(checkpoint_dir)
             checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -31,10 +42,10 @@ class UnsupervisedFineTuningTrainer:
             self.train_epoch(train_loader)
             self.validation(val_loader)
             print('-' * 100)
-            if checkpoint_dir is not None:
+            if checkpoint_dir is not None and i % checkpoint_freq == 0:
                 checkpoint_path = checkpoint_dir / f'{i}.pth'
                 print(f'Saving checkpoint to {checkpoint_path}')
-                torch.save(self.model.state_dict(), checkpoint_path)
+                torch.save(self.state_dict(), checkpoint_path)
                 wandb.save(str(checkpoint_path))
 
     def train_epoch(self, train_loader):
