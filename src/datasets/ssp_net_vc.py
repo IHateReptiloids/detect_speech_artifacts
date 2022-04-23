@@ -41,9 +41,9 @@ class SSPNetVC(torch.utils.data.Dataset):
                 name = fields[0]
                 wav, sr = torchaudio.load(data_path / f'{name}.wav')
                 if sr != target_sr:
-                    wav = torchaudio.functional.resample(wav, sr, target_sr)\
-                        .squeeze().numpy()
-                assert wav.dim() == 1
+                    wav = torchaudio.functional.resample(wav, sr, target_sr)
+                wav = wav.squeeze().numpy()
+                assert wav.ndim == 1
 
                 events = []
                 for i in range(4, len(fields), 3):
