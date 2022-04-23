@@ -2,6 +2,7 @@
 data/audioset/val/
 data/ssp/data
 data/ssp/labels.*
+wandb/
 .vscode
 
 # Byte-compiled / optimized / DLL files
