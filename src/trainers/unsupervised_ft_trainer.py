@@ -2,15 +2,24 @@ from collections import OrderedDict
 from pathlib import Path
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
 import wandb
 
 
 class UnsupervisedFineTuningTrainer:
-    def __init__(self, model, opt, device):
-        self.model = model.to(device)
-        self.opt = opt
+    def __init__(self, cfg, model_cls, opt_cls, device, num_classes):
+        model = model_cls(**cfg.model.args)
+        for p in model.parameters():
+            p.requires_grad_(False)
+        self.model = nn.Sequential(
+            model,
+            nn.Linear(model.num_features, num_classes)
+        ).to(device)
+
+        self.opt = opt_cls(self.model[1].parameters(), **cfg.opt.args)
+
         self.device = device
 
         self._num_iter = 0
@@ -24,7 +33,11 @@ class UnsupervisedFineTuningTrainer:
     
     def load_state_dict(self, sd):
         self.model.load_state_dict(sd['model'])
-        self.opt.load_state_dict(sd['opt'])
+
+        opt_sd = self.opt.state_dict()
+        opt_sd['state'] = sd['opt']['state']
+        self.opt.load_state_dict(opt_sd)
+
         self._num_iter = sd['num_iter']
     
     def state_dict(self):
@@ -74,8 +87,8 @@ class UnsupervisedFineTuningTrainer:
                 commit=(self._num_iter % 10 == 0)
             )
             self._num_iter += 1
-        print('Train loss:', total_loss / len(train_loader))
-        print('Train accuracy:', total_acc / len(train_loader))
+        print('Train loss:', total_loss.item() / len(train_loader))
+        print('Train accuracy:', total_acc.item() / len(train_loader))
 
     @torch.no_grad()
     def validation(self, val_loader):
@@ -93,11 +106,11 @@ class UnsupervisedFineTuningTrainer:
             acc = (output.argmax(dim=-1) == y).float().mean()
             total_acc += acc
 
-        val_loss = total_loss / len(val_loader)
-        val_acc = total_acc / len(val_loader)
+        val_loss = total_loss.item() / len(val_loader)
+        val_acc = total_acc.item() / len(val_loader)
         wandb.log(
             data={'val/loss': val_loss, 'val/accuracy': val_acc},
             step=self._num_iter
         )
-        print('Validation loss:', total_loss / len(val_loader))
-        print('Validation accuracy:', total_acc / len(val_loader))
+        print('Validation loss:', val_loss)
+        print('Validation accuracy:', val_acc)

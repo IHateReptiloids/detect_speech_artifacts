@@ -29,20 +29,16 @@ def main(cfg: DictConfig):
 
     train_ds = DATASETS[cfg.train_ds.name](**cfg.train_ds.args)
     val_ds = DATASETS[cfg.val_ds.name](**cfg.val_ds.args)
+    if train_ds.num_classes != val_ds.num_classes:
+        raise ValueError('Train dataset and validation dataset have ' +\
+                         'different number of classes')
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    model = MODELS[cfg.model.name](**cfg.model.args)
-
-    for p in model.parameters():
-        p.requires_grad_(False)
-    model = nn.Sequential(
-        model,
-        nn.Linear(model.num_features, 3)
+    trainer = UnsupervisedFineTuningTrainer(
+        cfg, MODELS[cfg.model.name], OPTS[cfg.opt.name],
+        device, train_ds.num_classes
     )
-
-    opt = OPTS[cfg.opt.name](model[1].parameters(), **cfg.opt.args)
-    trainer = UnsupervisedFineTuningTrainer(model, opt, device)
 
     train_loader = torch.utils.data.DataLoader(train_ds,
                                                batch_size=cfg.batch_size,
@@ -51,7 +47,7 @@ def main(cfg: DictConfig):
     val_loader = torch.utils.data.DataLoader(val_ds, batch_size=cfg.batch_size,
                                              collate_fn=trainer.collate_fn)
 
-    wandb.watch((model,), log='all', log_freq=cfg.wandb_log_freq)
+    wandb.watch((trainer.model,), log='all', log_freq=cfg.wandb_log_freq)
     if cfg.wandb_file_name is not None and cfg.wandb_run_path is not None:
         f = wandb.restore(cfg.wandb_file_name, cfg.wandb_run_path,
                           cfg.checkpoint_dir)
