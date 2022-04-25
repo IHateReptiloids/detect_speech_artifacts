@@ -12,7 +12,7 @@ hydra:
 batch_size: 16
 checkpoint_dir: "checkpoints/${model.name}-${train_ds.name}"
 checkpoint_freq: 1
-num_epochs: 10
+num_epochs: ???
 seed: 8228
 wandb_file_name: null
 wandb_log_freq: 100
