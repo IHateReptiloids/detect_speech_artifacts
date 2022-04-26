@@ -44,4 +44,5 @@ def visualize(wav, pred, y_aligned, ind2label):
                          newshape=(int(fig.bbox.bounds[3]),
                          int(fig.bbox.bounds[2]), -1))
     io_buf.close()
+    plt.close(fig)
     return img_arr
