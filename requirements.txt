@@ -4,6 +4,7 @@ attrs==21.4.0
 backcall==0.2.0
 black==22.1.0
 certifi==2021.10.8
+cffi==1.15.0
 charset-normalizer==2.0.12
 click==8.0.3
 cycler==0.11.0
@@ -51,6 +52,7 @@ psutil==5.9.0
 ptyprocess==0.7.0
 pure-eval==0.2.2
 py==1.11.0
+pycparser==2.21
 Pygments==2.11.2
 pyparsing==3.0.7
 pytest==7.1.1
@@ -69,6 +71,7 @@ shortuuid==1.0.8
 six==1.16.0
 sklearn==0.0
 smmap==5.0.0
+SoundFile==0.10.3.post1
 stack-data==0.1.4
 threadpoolctl==3.1.0
 timm==0.4.12
