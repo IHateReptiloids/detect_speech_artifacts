@@ -1,4 +1,7 @@
-from .metrics import mAP
+from .metrics import f1_score, mAP
 
 
-__all__ = ['mAP']
+__all__ = [
+    'f1_score',
+    'mAP'
+]

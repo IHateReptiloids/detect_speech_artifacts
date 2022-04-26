@@ -1,6 +1,13 @@
 import torch
 
-from src.metrics import mAP
+from src.metrics import f1_score, mAP
+
+
+def test_f1_score():
+    pred = torch.tensor([0, 0, 1, 2, 2])
+    true = torch.tensor([0, 1, 1, 2, 0])
+    expected = torch.tensor([0.5, 2 / 3, 2 / 3])
+    assert torch.allclose(f1_score(pred, true, 3), expected)
 
 
 def test_mAP():
