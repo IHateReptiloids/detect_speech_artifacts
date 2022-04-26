@@ -27,8 +27,12 @@ def main(cfg: DictConfig):
 
     seed_all(cfg.seed)
 
-    train_ds = DATASETS[cfg.train_ds.name](**cfg.train_ds.args)
-    val_ds = DATASETS[cfg.val_ds.name](**cfg.val_ds.args)
+    train_ds = DATASETS[cfg.train_ds.name](
+        target_sr=MODELS[cfg.model.name].INPUT_SR, **cfg.train_ds.args
+    )
+    val_ds = DATASETS[cfg.val_ds.name](
+        target_sr=MODELS[cfg.model.name].INPUT_SR, **cfg.val_ds.args
+    )
     if train_ds.NUM_CLASSES != val_ds.NUM_CLASSES:
         raise ValueError('Train dataset and validation dataset have ' +\
                          'different number of classes')

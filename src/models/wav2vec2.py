@@ -6,6 +6,8 @@ from transformers import Wav2Vec2Model, Wav2Vec2Processor
 
 
 class Wav2Vec2Pretrained(torch.nn.Module):
+    INPUT_SR = 16_000
+
     def __init__(self, size='base'):
         super().__init__()
         if size not in ('base', 'large'):
