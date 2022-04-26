@@ -7,20 +7,35 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import wandb
 
+from src.metrics import f1_score
+
 
 class UnsupervisedFineTuningTrainer:
-    def __init__(self, cfg, model_cls, opt_cls, device, num_classes):
+    def __init__(self, cfg, model_cls, opt_cls, device, train_ds, val_ds):
+        self.cfg = cfg
+
         model = model_cls(**cfg.model.args)
         for p in model.parameters():
             p.requires_grad_(False)
         self.model = nn.Sequential(
             model,
-            nn.Linear(model.num_features, num_classes)
+            nn.Linear(model.num_features, train_ds.NUM_CLASSES)
         ).to(device)
 
         self.opt = opt_cls(self.model[1].parameters(), **cfg.opt.args)
 
         self.device = device
+
+        self.train_ds = train_ds
+        self.train_loader = torch.utils.data.DataLoader(
+            self.train_ds, batch_size=self.cfg.batch_size,
+            shuffle=True, collate_fn=self.collate_fn
+        )
+        self.val_ds = val_ds
+        self.val_loader = torch.utils.data.DataLoader(
+            self.val_ds, batch_size=self.cfg.batch_size,
+            collate_fn=self.collate_fn
+        )
 
         self._num_iter = 0
     
@@ -47,15 +62,14 @@ class UnsupervisedFineTuningTrainer:
         sd['num_iter'] = self._num_iter
         return sd
 
-    def train_loop(self, num_epochs, train_loader, val_loader,
-                   checkpoint_dir, checkpoint_freq):
+    def train_loop(self, num_epochs, checkpoint_dir, checkpoint_freq):
         if checkpoint_dir is not None:
             checkpoint_dir = Path(checkpoint_dir)
             checkpoint_dir.mkdir(parents=True, exist_ok=True)
         for i in range(1, num_epochs + 1):
             print(f'Epoch {i}:')
-            self.train_epoch(train_loader)
-            self.validation(val_loader)
+            self.train_epoch()
+            self.validation()
             print('-' * 100)
             if checkpoint_dir is not None and i % checkpoint_freq == 0:
                 checkpoint_path = checkpoint_dir / f'{self._num_iter}.pth'
@@ -63,11 +77,11 @@ class UnsupervisedFineTuningTrainer:
                 torch.save(self.state_dict(), checkpoint_path)
                 wandb.save(str(checkpoint_path))
 
-    def train_epoch(self, train_loader):
+    def train_epoch(self):
         self.model.train()
-        total_loss = 0
-        total_acc = 0
-        for x, y in tqdm(train_loader):
+        total_loss = torch.zeros(1, device=self.device)
+        total_acc = torch.zeros(1, device=self.device)
+        for x, y in tqdm(self.train_loader):
             x = x.to(self.device)
             y = y.to(self.device)
             output = self.model(x)
@@ -87,15 +101,17 @@ class UnsupervisedFineTuningTrainer:
                 commit=(self._num_iter % 10 == 0)
             )
             self._num_iter += 1
-        print('Train loss:', total_loss.item() / len(train_loader))
-        print('Train accuracy:', total_acc.item() / len(train_loader))
+        print('Train loss:', total_loss.item() / len(self.train_loader))
+        print('Train accuracy:', total_acc.item() / len(self.train_loader))
 
     @torch.no_grad()
-    def validation(self, val_loader):
+    def validation(self):
         self.model.eval()
-        total_loss = 0
-        total_acc = 0
-        for x, y in tqdm(val_loader):
+        total_loss = torch.zeros(1, device=self.device)
+        total_acc = torch.zeros(1, device=self.device) 
+        total_f1_scores = torch.zeros(self.val_ds.NUM_CLASSES,
+                                      device=self.device)
+        for x, y in tqdm(self.val_loader):
             x = x.to(self.device)
             y = y.to(self.device)
             output = self.model(x)
@@ -103,13 +119,19 @@ class UnsupervisedFineTuningTrainer:
                                    y.flatten())
 
             total_loss += loss
-            acc = (output.argmax(dim=-1) == y).float().mean()
-            total_acc += acc
 
-        val_loss = total_loss.item() / len(val_loader)
-        val_acc = total_acc.item() / len(val_loader)
+            pred = output.argmax(dim=-1)
+            total_acc += (pred == y).float().mean()
+            total_f1_scores += f1_score(pred, y, len(total_f1_scores))
+
+        val_loss = total_loss.item() / len(self.val_loader)
+        val_acc = total_acc.item() / len(self.val_loader)
+        f1_scores = total_f1_scores.cpu().numpy() / len(self.val_loader)
+        data = {'val/loss': val_loss, 'val/accuracy': val_acc}
+        for ind, score in enumerate(f1_scores):
+            data[f'val/{self.val_ds.IND2LABEL[ind]}_f1_score'] = score.item()
         wandb.log(
-            data={'val/loss': val_loss, 'val/accuracy': val_acc},
+            data=data,
             step=self._num_iter
         )
         print('Validation loss:', val_loss)

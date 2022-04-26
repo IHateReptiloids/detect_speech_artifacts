@@ -29,7 +29,7 @@ def main(cfg: DictConfig):
 
     train_ds = DATASETS[cfg.train_ds.name](**cfg.train_ds.args)
     val_ds = DATASETS[cfg.val_ds.name](**cfg.val_ds.args)
-    if train_ds.num_classes != val_ds.num_classes:
+    if train_ds.NUM_CLASSES != val_ds.NUM_CLASSES:
         raise ValueError('Train dataset and validation dataset have ' +\
                          'different number of classes')
 
@@ -37,15 +37,8 @@ def main(cfg: DictConfig):
 
     trainer = UnsupervisedFineTuningTrainer(
         cfg, MODELS[cfg.model.name], OPTS[cfg.opt.name],
-        device, train_ds.num_classes
+        device, train_ds, val_ds
     )
-
-    train_loader = torch.utils.data.DataLoader(train_ds,
-                                               batch_size=cfg.batch_size,
-                                               shuffle=True,
-                                               collate_fn=trainer.collate_fn)
-    val_loader = torch.utils.data.DataLoader(val_ds, batch_size=cfg.batch_size,
-                                             collate_fn=trainer.collate_fn)
 
     wandb.watch((trainer.model,), log='all', log_freq=cfg.wandb_log_freq)
     if cfg.wandb_file_name is not None and cfg.wandb_run_path is not None:
@@ -53,10 +46,8 @@ def main(cfg: DictConfig):
                           cfg.checkpoint_dir)
         trainer.load_state_dict(torch.load(f.name, map_location=device))
         f.close()
-    trainer.train_loop(cfg.num_epochs, train_loader, val_loader,
-                       cfg.checkpoint_dir, cfg.checkpoint_freq)
+    trainer.train_loop(cfg.num_epochs, cfg.checkpoint_dir, cfg.checkpoint_freq)
 
 
 if __name__ == '__main__':
     main()
-

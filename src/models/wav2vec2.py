@@ -4,8 +4,6 @@ import numpy as np
 import torch
 from transformers import Wav2Vec2Model, Wav2Vec2Processor
 
-from src.datasets import SSPNetVCEvent
-
 
 class Wav2Vec2Pretrained(torch.nn.Module):
     def __init__(self, size='base'):
@@ -27,7 +25,7 @@ class Wav2Vec2Pretrained(torch.nn.Module):
         return self.model(x).last_hidden_state
 
     @staticmethod
-    def align(wav: torch.Tensor, events: List[SSPNetVCEvent]) -> torch.Tensor:
+    def align(wav: torch.Tensor, events) -> torch.Tensor:
         if wav.ndim != 1:
             raise ValueError('Expected one channel wav')
         num_emb = 1 + (len(wav) - 400) // 320

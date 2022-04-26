@@ -10,10 +10,8 @@ URL = 'http://www.dcs.gla.ac.uk/~vincia/datavocalizations/vocalizationcorpus.zip
 
 class SSPNetVCEvent:
     def __init__(self, label: str, start: float, end: float):
-        if label not in ('filler', 'laughter'):
-            raise ValueError('Invalid label')
         self.label = label
-        self.label_idx = 1 if label == 'filler' else 2
+        self.label_idx = SSPNetVC.LABEL2IND[label]
         self.start = start
         self.end = end
     
@@ -28,6 +26,13 @@ class SSPNetVCEvent:
 
 
 class SSPNetVC(torch.utils.data.Dataset):
+    NUM_CLASSES = 3
+
+    IND2LABEL = ['nothing', 'filler', 'laughter']
+    LABEL2IND = {
+        'nothing': 0, 'filler': 1, 'laughter': 2
+    }
+
     def __init__(self, data_path='data/ssp/data',
                  labels_path='data/ssp/labels.txt', target_sr=32_000):
         super().__init__()
