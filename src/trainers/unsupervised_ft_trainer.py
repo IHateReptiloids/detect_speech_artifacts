@@ -9,6 +9,7 @@ import wandb
 
 from src.metrics import f1_score
 from src.models import LSTMWrapper
+from src.utils import visualize
 
 
 class UnsupervisedFineTuningTrainer:
@@ -112,8 +113,13 @@ class UnsupervisedFineTuningTrainer:
             acc = (output.argmax(dim=-1) == y).float().mean()
             total_acc += acc
 
+            data = {
+                'train/loss': loss.detach(),
+                'train/accuracy': acc,
+                'train/lr': self.opt.param_groups[0]['lr']
+            }
             wandb.log(
-                data={'train/loss': loss.detach(), 'train/accuracy': acc},
+                data=data,
                 step=self._num_iter,
                 commit=(self._num_iter % 10 == 0)
             )
@@ -128,23 +134,38 @@ class UnsupervisedFineTuningTrainer:
         total_acc = torch.zeros(1, device=self.device) 
         total_f1_scores = torch.zeros(self.val_ds.NUM_CLASSES,
                                       device=self.device)
+        table = wandb.Table(columns=['wav', 'prediction'])
         for x, y in tqdm(self.val_loader):
             x = x.to(self.device)
             y = y.to(self.device)
             output = self.model(x)
             loss = F.cross_entropy(output.view(-1, output.shape[-1]),
                                    y.flatten())
-
             total_loss += loss
 
             pred = output.argmax(dim=-1)
             total_acc += (pred == y).float().mean()
             total_f1_scores += f1_score(pred, y, len(total_f1_scores))
 
+            wav = x[0].cpu().numpy()
+            prediction_img = visualize(
+                wav, pred[0].cpu().numpy(),
+                y[0].cpu().numpy(), self.val_ds.IND2LABEL
+            )
+            table.add_data(
+                wandb.Audio(wav, sample_rate=self.model[0].INPUT_SR),
+                wandb.Image(prediction_img)
+            )
+
         val_loss = total_loss.item() / len(self.val_loader)
         val_acc = total_acc.item() / len(self.val_loader)
         f1_scores = total_f1_scores.cpu().numpy() / len(self.val_loader)
-        data = {'val/loss': val_loss, 'val/accuracy': val_acc}
+
+        data = {
+            'val/loss': val_loss,
+            'val/accuracy': val_acc,
+            'val/table': table
+        }
         for ind, score in enumerate(f1_scores):
             data[f'val/{self.val_ds.IND2LABEL[ind]}_f1_score'] = score.item()
         wandb.log(

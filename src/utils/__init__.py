@@ -1,8 +1,10 @@
 from .compress_predictions import compress_predictions
 from .seed_all import seed_all
+from .visualize import visualize
 
 
 __all__ = [
     'compress_predictions',
-    'seed_all'
+    'seed_all',
+    'visualize'
 ]
