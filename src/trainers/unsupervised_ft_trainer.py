@@ -8,6 +8,7 @@ from tqdm import tqdm
 import wandb
 
 from src.metrics import f1_score
+from src.models import LSTMWrapper
 
 
 class UnsupervisedFineTuningTrainer:
@@ -15,14 +16,30 @@ class UnsupervisedFineTuningTrainer:
         self.cfg = cfg
 
         model = model_cls(**cfg.model.args)
-        for p in model.parameters():
-            p.requires_grad_(False)
+        if cfg.trainer.freeze:
+            for p in model.parameters():
+                p.requires_grad_(False)
+            
+        if cfg.trainer.head == 'mlp':
+            head = nn.Linear(model.num_features, train_ds.NUM_CLASSES)
+        elif cfg.trainer.head == 'lstm':
+            head = nn.Sequential(
+                LSTMWrapper(model.num_features, model.num_features,
+                            batch_first=True),
+                nn.Linear(model.num_features, train_ds.NUM_CLASSES)
+            )
+        else:
+            raise ValueError('Invalid cfg.trainer.head param')
+
         self.model = nn.Sequential(
             model,
-            nn.Linear(model.num_features, train_ds.NUM_CLASSES)
+            head
         ).to(device)
 
-        self.opt = opt_cls(self.model[1].parameters(), **cfg.opt.args)
+        if cfg.trainer.freeze:
+            self.opt = opt_cls(self.model[1].parameters(), **cfg.opt.args)
+        else:
+            self.opt = opt_cls(self.model.parameters(), **cfg.opt.args)
 
         self.device = device
 
