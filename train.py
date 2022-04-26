@@ -6,7 +6,6 @@ import wandb
 from src.datasets import SSPNetVC
 from src.models import Wav2Vec2Pretrained
 from src.trainers import UnsupervisedFineTuningTrainer
-from src.utils import seed_all
 
 DATASETS = {
     'ssp_net_vc': SSPNetVC
@@ -20,12 +19,16 @@ OPTS = {
     'adam': torch.optim.Adam
 }
 
+TRAINERS = {
+    'unsupervised_ft_trainer': UnsupervisedFineTuningTrainer
+}
+
 
 @hydra.main(config_path='configs', config_name='config')
 def main(cfg: DictConfig):
     wandb.init(config=cfg)
 
-    seed_all(cfg.seed)
+    torch.manual_seed(cfg.seed)
 
     train_ds = DATASETS[cfg.train_ds.name](
         target_sr=MODELS[cfg.model.name].INPUT_SR, **cfg.train_ds.args
