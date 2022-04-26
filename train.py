@@ -1,12 +1,12 @@
 import hydra
 from omegaconf import DictConfig
 import torch
-import torch.nn as nn
 import wandb
 
 from src.datasets import SSPNetVC
 from src.models import Wav2Vec2Pretrained
 from src.trainers import UnsupervisedFineTuningTrainer
+from src.utils import seed_all
 
 DATASETS = {
     'ssp_net_vc': SSPNetVC
@@ -23,9 +23,9 @@ OPTS = {
 
 @hydra.main(config_path='configs', config_name='config')
 def main(cfg: DictConfig):
-    wandb.init()
+    wandb.init(config=cfg)
 
-    torch.manual_seed(cfg.seed)
+    seed_all(cfg.seed)
 
     train_ds = DATASETS[cfg.train_ds.name](**cfg.train_ds.args)
     val_ds = DATASETS[cfg.val_ds.name](**cfg.val_ds.args)
