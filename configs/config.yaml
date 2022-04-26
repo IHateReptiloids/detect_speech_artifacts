@@ -15,5 +15,6 @@ checkpoint_freq: 1
 num_epochs: ???
 seed: 8228
 wandb_file_name: null
+wandb_group: wav2vec2-finetuning
 wandb_log_freq: 100
 wandb_run_path: null
