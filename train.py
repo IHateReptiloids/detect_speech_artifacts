@@ -26,7 +26,7 @@ TRAINERS = {
 
 @hydra.main(config_path='configs', config_name='config')
 def main(cfg: DictConfig):
-    wandb.init(config=cfg)
+    wandb.init(config=cfg, group=cfg.wandb_group)
 
     torch.manual_seed(cfg.seed)
 
