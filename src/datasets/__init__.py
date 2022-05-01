@@ -1,3 +1,4 @@
+from .concat_dataset import ConcatDataset
 from .event import Event
 from .legacy_SSPNetVC import LegacySSPNetVC
 from .libri_stutter import LibriStutter
@@ -6,6 +7,7 @@ from .ssp_net_vc import SSPNetVC
 
 
 __all__ = [
+    'ConcatDataset',
     'Event',
     'LegacySSPNetVC',
     'LibriStutter',
