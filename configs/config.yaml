@@ -1,9 +1,11 @@
 defaults:
 - model: wav2vec2
 - opt: adam
-- train_ds: ssp_net_vc
+- train_ds:
+  - ssp_net_vc
 - trainer: unsupervised_ft_trainer
-- val_ds: ssp_net_vc
+- val_ds:
+  - ssp_net_vc
 - _self_
 
 hydra:

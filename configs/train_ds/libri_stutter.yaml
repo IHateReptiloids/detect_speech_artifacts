@@ -1,0 +1,3 @@
+libri_stutter:
+  data_path: 'data/libri_stutter'
+  labels_path: 'data/libri_stutter/train_labels.txt'

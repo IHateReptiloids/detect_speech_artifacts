@@ -3,11 +3,12 @@ from omegaconf import DictConfig
 import torch
 import wandb
 
-from src.datasets import SSPNetVC
+from src.datasets import ConcatDataset, LibriStutter, SSPNetVC
 from src.models import Wav2Vec2Pretrained
 from src.trainers import UnsupervisedFineTuningTrainer
 
 DATASETS = {
+    'libri_stutter': LibriStutter,
     'ssp_net_vc': SSPNetVC
 }
 
@@ -24,18 +25,23 @@ TRAINERS = {
 }
 
 
+def make_dataset(ds_cfg, target_sr):
+    datasets = []
+    for name, args in ds_cfg.items():
+        datasets.append(DATASETS[name](target_sr=target_sr, **args))
+    if len(datasets) == 1:
+        return datasets[0]
+    return ConcatDataset(datasets)
+
+
 @hydra.main(config_path='configs', config_name='config')
 def main(cfg: DictConfig):
     wandb.init(config=cfg, group=cfg.wandb_group)
 
     torch.manual_seed(cfg.seed)
 
-    train_ds = DATASETS[cfg.train_ds.name](
-        target_sr=MODELS[cfg.model.name].INPUT_SR, **cfg.train_ds.args
-    )
-    val_ds = DATASETS[cfg.val_ds.name](
-        target_sr=MODELS[cfg.model.name].INPUT_SR, **cfg.val_ds.args
-    )
+    train_ds = make_dataset(cfg.train_ds, MODELS[cfg.model.name].INPUT_SR)
+    val_ds = make_dataset(cfg.val_ds, MODELS[cfg.model.name].INPUT_SR)
     if train_ds.NUM_CLASSES != val_ds.NUM_CLASSES:
         raise ValueError('Train dataset and validation dataset have ' +\
                          'different number of classes')

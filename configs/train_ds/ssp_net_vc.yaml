@@ -1,4 +1,3 @@
-name: ssp_net_vc
-args:
+ssp_net_vc:
   data_path: 'data/ssp/data'
   labels_path: 'data/ssp/train_labels.txt'
