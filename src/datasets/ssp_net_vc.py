@@ -5,24 +5,9 @@ import torch
 import torchaudio
 import wget
 
+from .event import Event
+
 URL = 'http://www.dcs.gla.ac.uk/~vincia/datavocalizations/vocalizationcorpus.zip'
-
-
-class SSPNetVCEvent:
-    def __init__(self, label: str, start: float, end: float):
-        self.label = label
-        self.label_idx = SSPNetVC.LABEL2IND[label]
-        self.start = start
-        self.end = end
-    
-    def __eq__(self, other):
-        if not isinstance(other, SSPNetVCEvent):
-            return False
-        return self.label_idx == other.label_idx and\
-               self.start == other.start and self.end == other.end
-    
-    def __repr__(self):
-        return ' '.join([self.label, str(self.start), str(self.end)])
 
 
 class SSPNetVC(torch.utils.data.Dataset):
@@ -56,7 +41,8 @@ class SSPNetVC(torch.utils.data.Dataset):
                 events = []
                 for i in range(4, len(fields), 3):
                     label, start, end = fields[i:i + 3]
-                    events.append(SSPNetVCEvent(label, float(start), float(end)))
+                    events.append(Event(label, self.LABEL2IND[label],
+                                        float(start), float(end)))
                 self._data.append((wav, events))
 
     def __getitem__(self, ind):

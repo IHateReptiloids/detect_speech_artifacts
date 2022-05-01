@@ -1,6 +1,9 @@
 # Project
 checkpoints/
 data/audioset/val/
+data/libri_stutter/LibriStutter Annotations/
+data/libri_stutter/LibriStutter Audio/
+data/libri_stutter/README.txt
 data/ssp/data
 data/ssp/labels.*
 wandb/
