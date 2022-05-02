@@ -2,48 +2,22 @@ from collections import OrderedDict
 from pathlib import Path
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
 import wandb
 
 from src.metrics import f1_score
-from src.models import LSTMWrapper
 from src.utils import visualize
 
 
-class UnsupervisedFineTuningTrainer:
+class FramewiseClassificationTrainer:
     def __init__(self, cfg, model_cls, opt_cls, device, train_ds, val_ds):
         self.cfg = cfg
-
-        model = model_cls(**cfg.model.args)
-        if cfg.trainer.freeze:
-            for p in model.parameters():
-                p.requires_grad_(False)
-            
-        if cfg.trainer.head == 'mlp':
-            head = nn.Linear(model.num_features, train_ds.NUM_CLASSES)
-        elif cfg.trainer.head == 'lstm':
-            head = nn.Sequential(
-                LSTMWrapper(model.num_features, model.num_features,
-                            batch_first=True),
-                nn.Linear(model.num_features, train_ds.NUM_CLASSES)
-            )
-        else:
-            raise ValueError('Invalid cfg.trainer.head param')
-
-        self.model = nn.Sequential(
-            model,
-            head
+        self.model = model_cls(
+            num_classes=train_ds.NUM_CLASSES, **cfg.model.args
         ).to(device)
-
-        if cfg.trainer.freeze:
-            self.opt = opt_cls(self.model[1].parameters(), **cfg.opt.args)
-        else:
-            self.opt = opt_cls(self.model.parameters(), **cfg.opt.args)
-
+        self.opt = opt_cls(self.model.parameters(), **cfg.opt.args)
         self.device = device
-
         self.train_ds = train_ds
         self.train_loader = torch.utils.data.DataLoader(
             self.train_ds, batch_size=self.cfg.batch_size,
@@ -59,8 +33,8 @@ class UnsupervisedFineTuningTrainer:
     
     def collate_fn(self, objects):
         wavs, labels = list(zip(*objects))
-        wavs = self.model[0].collate(wavs)
-        labels = torch.stack([self.model[0].align(wav, label)
+        wavs = self.model.collate(wavs)
+        labels = torch.stack([self.model.align(wav, label)
                               for wav, label in zip(wavs, labels)], dim=0)
         return wavs, labels
     
@@ -72,7 +46,7 @@ class UnsupervisedFineTuningTrainer:
         self.opt.load_state_dict(opt_sd)
 
         self._num_iter = sd['num_iter']
-    
+
     def state_dict(self):
         sd = OrderedDict()
         sd['model'] = self.model.state_dict()

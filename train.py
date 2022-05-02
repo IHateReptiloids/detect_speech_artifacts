@@ -5,7 +5,7 @@ import wandb
 
 from src.datasets import ConcatDataset, LibriStutter, SSPNetVC
 from src.models import Wav2Vec2Pretrained
-from src.trainers import UnsupervisedFineTuningTrainer
+from src.trainers import FramewiseClassificationTrainer
 
 DATASETS = {
     'libri_stutter': LibriStutter,
@@ -21,7 +21,7 @@ OPTS = {
 }
 
 TRAINERS = {
-    'unsupervised_ft_trainer': UnsupervisedFineTuningTrainer
+    'framewise_clsf_trainer': FramewiseClassificationTrainer
 }
 
 
@@ -48,7 +48,7 @@ def main(cfg: DictConfig):
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    trainer = UnsupervisedFineTuningTrainer(
+    trainer = FramewiseClassificationTrainer(
         cfg, MODELS[cfg.model.name], OPTS[cfg.opt.name],
         device, train_ds, val_ds
     )

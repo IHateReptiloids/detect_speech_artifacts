@@ -3,7 +3,6 @@ defaults:
 - opt: adam
 - train_ds:
   - ssp_net_vc
-- trainer: unsupervised_ft_trainer
 - val_ds:
   - ssp_net_vc
 - _self_
@@ -13,11 +12,11 @@ hydra:
     dir: '.'
 
 batch_size: 16
-checkpoint_dir: "checkpoints/${model.name}-${train_ds.name}"
+checkpoint_dir: "checkpoints/${wandb_group}"
 checkpoint_freq: 1
 num_epochs: ???
 seed: 8228
 wandb_file_name: null
-wandb_group: wav2vec2-finetuning
+wandb_group: ???
 wandb_log_freq: 100
 wandb_run_path: null
