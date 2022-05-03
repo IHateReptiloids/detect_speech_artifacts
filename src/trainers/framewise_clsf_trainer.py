@@ -105,7 +105,7 @@ class FramewiseClassificationTrainer:
     def validation(self):
         self.model.eval()
         total_loss = torch.zeros(1, device=self.device)
-        total_acc = torch.zeros(1, device=self.device) 
+        total_acc = torch.zeros(1, device=self.device)
         total_f1_scores = torch.zeros(self.val_ds.NUM_CLASSES,
                                       device=self.device)
         table = wandb.Table(columns=['wav', 'prediction'])
@@ -127,7 +127,7 @@ class FramewiseClassificationTrainer:
                 y[0].cpu().numpy(), self.val_ds.IND2LABEL
             )
             table.add_data(
-                wandb.Audio(wav, sample_rate=self.model[0].INPUT_SR),
+                wandb.Audio(wav, sample_rate=self.model.INPUT_SR),
                 wandb.Image(prediction_img)
             )
 

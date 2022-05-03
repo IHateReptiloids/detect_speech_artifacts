@@ -19,6 +19,7 @@ class Spectrogrammer(torchaudio.transforms.MelSpectrogram):
         )
     
     def forward(self, x):
+        # returns spectrogram of shape [B, T, F]
         return torch.log(super().forward(x).clamp(1e-9, 1e9)).transpose(-2, -1)
     
     def align(self, wav: torch.Tensor, events: List[Event]) -> torch.Tensor:

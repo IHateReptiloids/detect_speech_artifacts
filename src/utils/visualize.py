@@ -1,7 +1,10 @@
 import io
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+matplotlib.use('agg')
 
 
 def visualize(wav, pred, y_aligned, ind2label):
@@ -44,5 +47,5 @@ def visualize(wav, pred, y_aligned, ind2label):
                          newshape=(int(fig.bbox.bounds[3]),
                          int(fig.bbox.bounds[2]), -1))
     io_buf.close()
-    plt.close(fig)
+    plt.close('all')
     return img_arr

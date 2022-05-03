@@ -1,0 +1,11 @@
+name: 'crnn'
+args:
+  n_fft: 400
+  hop_length: 160
+  n_mels: 40
+  conv_out_c: 8
+  conv_kernel_size: [20, 5]
+  conv_stride: [8, 2]
+  gru_num_features: 64
+  gru_num_layers: 2
+  gru_dropout: 0.1

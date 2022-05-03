@@ -4,7 +4,7 @@ import torch
 import wandb
 
 from src.datasets import ConcatDataset, LibriStutter, SSPNetVC
-from src.models import Wav2Vec2Pretrained
+from src.models import CRNN, Wav2Vec2Pretrained
 from src.trainers import FramewiseClassificationTrainer
 
 DATASETS = {
@@ -13,6 +13,7 @@ DATASETS = {
 }
 
 MODELS = {
+    'crnn': CRNN,
     'wav2vec2': Wav2Vec2Pretrained
 }
 
