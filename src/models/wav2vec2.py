@@ -1,5 +1,5 @@
 from multiprocessing.sharedctypes import Value
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import torch
@@ -7,10 +7,15 @@ import torch.nn as nn
 from transformers import Wav2Vec2Model, Wav2Vec2Processor
 
 from .lstm_wrapper import LSTMWrapper
+from src.datasets import Event
+from src.utils import align
 
 
 class Wav2Vec2Pretrained(torch.nn.Module):
     INPUT_SR = 16_000
+
+    WIN_LENGTH = 400
+    HOP_LENGTH = 320
 
     def __init__(self, size='base', freeze=True, head=None, num_classes=None):
         super().__init__()
@@ -41,7 +46,7 @@ class Wav2Vec2Pretrained(torch.nn.Module):
 
     def collate(self, wavs: List[np.ndarray]) -> torch.Tensor:
         return self.processor(
-            wavs, padding=True, sampling_rate=16_000,
+            wavs, padding=True, sampling_rate=self.INPUT_SR,
             pad_to_multiple_of=128, return_tensors='pt'
         ).input_values
 
@@ -51,18 +56,6 @@ class Wav2Vec2Pretrained(torch.nn.Module):
             x = self.head(x)
         return x
 
-    @staticmethod
-    def align(wav: torch.Tensor, events) -> torch.Tensor:
-        if wav.ndim != 1:
-            raise ValueError('Expected one channel wav')
-        num_emb = 1 + (len(wav) - 400) // 320
-        labels = torch.zeros((num_emb,), dtype=torch.long)
-        for event in events:
-            start_emb_idx = (int(event.start * 16_000) + 120) // 320
-            end_emb_idx = (int(event.end * 16_000) + 120) // 320
-            labels[start_emb_idx:end_emb_idx] = event.label_idx
-        return labels
-    
-    @staticmethod
-    def idx2sec(start: int, end: int) -> Tuple[float, float]:
-        return (0.02 * start, 0.02 * (end - 1) + 0.025)
+    @classmethod
+    def align(cls, wav: torch.Tensor, events: List[Event]) -> torch.Tensor:
+        return align(wav, events, cls.INPUT_SR, cls.WIN_LENGTH, cls.HOP_LENGTH)
