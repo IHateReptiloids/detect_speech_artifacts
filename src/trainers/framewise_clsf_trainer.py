@@ -77,7 +77,7 @@ class FramewiseClassificationTrainer:
             x = x.to(self.device)
             y = y.to(self.device)
             output = self.model(x)
-            loss = F.cross_entropy(output.view(-1, output.shape[-1]),
+            loss = F.cross_entropy(output.reshape(-1, output.shape[-1]),
                                    y.flatten())
             self.opt.zero_grad()
             loss.backward()
