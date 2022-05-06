@@ -20,12 +20,12 @@ class FramewiseClassificationTrainer:
         self.device = device
         self.train_ds = train_ds
         self.train_loader = torch.utils.data.DataLoader(
-            self.train_ds, batch_size=self.cfg.batch_size,
+            self.train_ds, batch_size=self.cfg.train_batch_size,
             shuffle=True, collate_fn=self.collate_fn
         )
         self.val_ds = val_ds
         self.val_loader = torch.utils.data.DataLoader(
-            self.val_ds, batch_size=self.cfg.batch_size,
+            self.val_ds, batch_size=self.cfg.val_batch_size,
             collate_fn=self.collate_fn
         )
 
@@ -113,7 +113,7 @@ class FramewiseClassificationTrainer:
             x = x.to(self.device)
             y = y.to(self.device)
             output = self.model(x)
-            loss = F.cross_entropy(output.view(-1, output.shape[-1]),
+            loss = F.cross_entropy(output.reshape(-1, output.shape[-1]),
                                    y.flatten())
             total_loss += loss
 

@@ -11,11 +11,12 @@ hydra:
   run:
     dir: '.'
 
-batch_size: 16
 checkpoint_dir: "checkpoints/${wandb_group}"
 checkpoint_freq: 1
 num_epochs: ???
 seed: 8228
+train_batch_size: 16
+val_batch_size: 16
 wandb_file_name: null
 wandb_group: ???
 wandb_log_freq: 100
