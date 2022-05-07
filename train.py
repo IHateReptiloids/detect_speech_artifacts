@@ -20,7 +20,8 @@ MODELS = {
 }
 
 OPTS = {
-    'adam': torch.optim.Adam
+    'adam': torch.optim.Adam,
+    'sgd': torch.optim.SGD
 }
 
 SCHEDULERS = {
