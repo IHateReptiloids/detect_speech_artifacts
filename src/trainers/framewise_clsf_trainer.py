@@ -30,7 +30,7 @@ class FramewiseClassificationTrainer:
             collate_fn=self.collate_fn
         )
         self.scheduler = scheduler_cls(
-            self.opt, num_iters=len(self.train_loader) * cfg.num_epochs,
+            self.opt, n_iters=len(self.train_loader) * cfg.num_epochs,
             **cfg.scheduler.args
         )
 
