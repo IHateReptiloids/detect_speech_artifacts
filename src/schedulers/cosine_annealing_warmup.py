@@ -4,12 +4,12 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, LambdaLR
 
 
 class CosineAnnealingWarmupScheduler:
-    def __init__(self, opt, n_warmup, n_iters):
+    def __init__(self, opt, warmup_frac, n_iters):
         self.cur_iter = 0
-        self.n_warmup = n_warmup
+        self.n_warmup = int(warmup_frac * n_iters)
 
-        self.cosine_scheduler = CosineAnnealingLR(opt, n_iters - n_warmup)
-        self.warmup_scheduler = LambdaLR(opt, lambda x: x / n_warmup)
+        self.cosine_scheduler = CosineAnnealingLR(opt, n_iters - self.n_warmup)
+        self.warmup_scheduler = LambdaLR(opt, lambda x: x / self.n_warmup)
     
     def load_state_dict(self, sd):
         self.cur_iter = sd['cur_iter']
