@@ -11,7 +11,8 @@ from src.utils import visualize
 
 
 class FramewiseClassificationTrainer:
-    def __init__(self, cfg, model_cls, opt_cls, device, train_ds, val_ds):
+    def __init__(self, cfg, model_cls, opt_cls, scheduler_cls,
+                 device, train_ds, val_ds):
         self.cfg = cfg
         self.model = model_cls(
             num_classes=train_ds.NUM_CLASSES, **cfg.model.args
@@ -28,6 +29,10 @@ class FramewiseClassificationTrainer:
             self.val_ds, batch_size=self.cfg.val_batch_size,
             collate_fn=self.collate_fn
         )
+        self.scheduler = scheduler_cls(
+            self.opt, num_iters=len(self.train_loader) * cfg.num_epochs,
+            **cfg.scheduler.args
+        )
 
         self._num_iter = 0
     
@@ -37,7 +42,7 @@ class FramewiseClassificationTrainer:
         labels = torch.stack([self.model.align(wav, label)
                               for wav, label in zip(wavs, labels)], dim=0)
         return wavs, labels
-    
+
     def load_state_dict(self, sd):
         self.model.load_state_dict(sd['model'])
 
@@ -45,12 +50,15 @@ class FramewiseClassificationTrainer:
         opt_sd['state'] = sd['opt']['state']
         self.opt.load_state_dict(opt_sd)
 
+        self.scheduler.load_state_dict(sd['scheduler'])
+
         self._num_iter = sd['num_iter']
 
     def state_dict(self):
         sd = OrderedDict()
         sd['model'] = self.model.state_dict()
         sd['opt'] = self.opt.state_dict()
+        sd['scheduler'] = self.scheduler.state_dict()
         sd['num_iter'] = self._num_iter
         return sd
 
@@ -82,6 +90,7 @@ class FramewiseClassificationTrainer:
             self.opt.zero_grad()
             loss.backward()
             self.opt.step()
+            self.scheduler.step()
 
             total_loss += loss.detach()
             acc = (output.argmax(dim=-1) == y).float().mean()

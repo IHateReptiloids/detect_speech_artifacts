@@ -1,6 +1,7 @@
 defaults:
 - model: wav2vec2
 - opt: adam
+- scheduler: id_scheduler
 - train_ds:
   - ssp_net_vc
 - val_ds:

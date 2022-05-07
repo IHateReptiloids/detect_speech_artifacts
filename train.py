@@ -5,6 +5,7 @@ import wandb
 
 from src.datasets import ConcatDataset, LibriStutter, SSPNetVC
 from src.models import BCResNet, CRNN, Wav2Vec2Pretrained
+from src.schedulers import CosineAnnealingWarmupScheduler, IdScheduler
 from src.trainers import FramewiseClassificationTrainer
 
 DATASETS = {
@@ -20,6 +21,11 @@ MODELS = {
 
 OPTS = {
     'adam': torch.optim.Adam
+}
+
+SCHEDULERS = {
+    'cosine_annealing_warmup': CosineAnnealingWarmupScheduler,
+    'id_scheduler': IdScheduler
 }
 
 TRAINERS = {
@@ -52,7 +58,7 @@ def main(cfg: DictConfig):
 
     trainer = FramewiseClassificationTrainer(
         cfg, MODELS[cfg.model.name], OPTS[cfg.opt.name],
-        device, train_ds, val_ds
+        SCHEDULERS[cfg.scheduler.name], device, train_ds, val_ds
     )
 
     wandb.watch((trainer.model,), log='all', log_freq=cfg.wandb_log_freq)
