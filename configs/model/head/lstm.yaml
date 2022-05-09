@@ -1,0 +1,3 @@
+head_type: 'lstm'
+hidden_size: 40
+bidirectional: true
