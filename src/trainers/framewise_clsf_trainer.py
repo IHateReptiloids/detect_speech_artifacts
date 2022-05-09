@@ -22,12 +22,13 @@ class FramewiseClassificationTrainer:
         self.train_ds = train_ds
         self.train_loader = torch.utils.data.DataLoader(
             self.train_ds, batch_size=self.cfg.train_batch_size,
-            shuffle=True, collate_fn=self.collate_fn
+            shuffle=True, collate_fn=self.collate_fn,
+            num_workers=cfg.num_workers
         )
         self.val_ds = val_ds
         self.val_loader = torch.utils.data.DataLoader(
             self.val_ds, batch_size=self.cfg.val_batch_size,
-            collate_fn=self.collate_fn
+            collate_fn=self.collate_fn, num_workers=cfg.num_workers
         )
         self.scheduler = scheduler_cls(
             self.opt, n_iters=len(self.train_loader) * cfg.num_epochs,
