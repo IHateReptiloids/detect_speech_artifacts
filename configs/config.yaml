@@ -14,7 +14,7 @@ hydra:
 
 checkpoint_dir: "checkpoints/${wandb_group}"
 checkpoint_freq: 1
-device: "cpu"
+device: ???
 num_epochs: ???
 num_workers: 8
 seed: 8228

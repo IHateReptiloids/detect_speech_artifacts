@@ -1,5 +1,7 @@
+defaults:
+- head: linear
+
 name: 'wav2vec2'
 args:
   freeze: true
-  head: 'mlp'
   size: 'base'

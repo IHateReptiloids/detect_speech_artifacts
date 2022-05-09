@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from transformers import Wav2Vec2Model, Wav2Vec2Processor
 
-from .lstm_wrapper import LSTMWrapper
+from .head import Head
 from src.datasets import Event
 from src.utils import align
 
@@ -16,31 +16,23 @@ class Wav2Vec2Pretrained(torch.nn.Module):
     WIN_LENGTH = 400
     HOP_LENGTH = 320
 
-    def __init__(self, size='base', freeze=True, head=None, num_classes=None):
+    def __init__(self, cfg, num_classes=None):
         super().__init__()
-        if size not in ('base', 'large'):
+        args = cfg.model.args
+        if args.size not in ('base', 'large'):
             raise ValueError('Invalid size')
-        model_name = f'facebook/wav2vec2-{size}'
-        self.num_features = 768 if size == 'base' else 1024
+        model_name = f'facebook/wav2vec2-{args.size}'
+        self.num_features = 768 if args.size == 'base' else 1024
         self.model = Wav2Vec2Model.from_pretrained(model_name)
-        self.head = None
 
-        if freeze:
+        if args.freeze:
             for p in self.model.parameters():
                 p.requires_grad_(False)
-        if head is not None:
-            if num_classes is None:
-                raise ValueError('You must specify number of classes')
-            if head == 'mlp':
-                self.head = nn.Linear(self.num_features, num_classes)
-            elif head == 'lstm':
-                self.head = nn.Sequential(
-                    LSTMWrapper(self.num_features, self.num_features,
-                                batch_first=True),
-                    nn.Linear(self.num_features, num_classes)
-                )
-            else:
-                raise ValueError('Unknown head type')
+
+        self.head = None
+        if cfg.model.head is not None:
+            self.head = Head(cfg.model.head, self.num_features, num_classes)
+
         self.processor = Wav2Vec2Processor.from_pretrained(model_name)
 
     def collate(self, wavs: List[np.ndarray]) -> torch.Tensor:

@@ -1,3 +1,4 @@
 name: adam
 args:
-  lr: 3.0e-4
+  lr: 1.0e-2
+  weight_decay: 1.0e-3

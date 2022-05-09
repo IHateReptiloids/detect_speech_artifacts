@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from .head import Head
 from .spectrogrammer import Spectrogrammer
 from src.datasets import Event
 
@@ -94,40 +95,44 @@ class BCConvBlocks(nn.Module):
 class BCResNet(nn.Module):
     INPUT_SR = 16_000
 
-    def __init__(self, n_fft, hop_length, n_mels, mult, num_classes):
+    def __init__(self, cfg, num_classes=None):
         super().__init__()
-
-        if n_mels != 40:
+        args = cfg.model.args
+        if args.n_mels != 40:
             raise ValueError('Only n_mels=40 is supported')
 
         self.spectrogrammer = Spectrogrammer(
             sample_rate=self.INPUT_SR,
-            n_fft=n_fft,
-            hop_length=hop_length,
-            n_mels=n_mels
+            n_fft=args.n_fft,
+            hop_length=args.hop_length,
+            n_mels=args.n_mels
         )
 
-        self.mult = mult
+        self.mult = args.mult
 
         self.net = nn.Sequential(
-            nn.Conv2d(1, 16 * mult, kernel_size=(5, 5), stride=(2, 1),
+            nn.Conv2d(1, 16 * self.mult, kernel_size=(5, 5), stride=(2, 1),
                       padding=(2, 2)),
-            BCConvBlocks(2, mult, 16, 8, f_ks=3, t_ks=3, f_stride=1,
+            BCConvBlocks(2, self.mult, 16, 8, f_ks=3, t_ks=3, f_stride=1,
                          t_stride=1, f_dilation=1, t_dilation=1,
                          num_subbands=5, dropout=0.1),
-            BCConvBlocks(2, mult, 8, 12, f_ks=3, t_ks=3, f_stride=2,
+            BCConvBlocks(2, self.mult, 8, 12, f_ks=3, t_ks=3, f_stride=2,
                          t_stride=1, f_dilation=1, t_dilation=2,
                          num_subbands=5, dropout=0.1),
-            BCConvBlocks(4, mult, 12, 16, f_ks=3, t_ks=3, f_stride=2,
+            BCConvBlocks(4, self.mult, 12, 16, f_ks=3, t_ks=3, f_stride=2,
                          t_stride=1, f_dilation=1, t_dilation=4,
                          num_subbands=5, dropout=0.1),
-            BCConvBlocks(4, mult, 16, 20, f_ks=3, t_ks=3, f_stride=1,
+            BCConvBlocks(4, self.mult, 16, 20, f_ks=3, t_ks=3, f_stride=1,
                          t_stride=1, f_dilation=1, t_dilation=8,
                          num_subbands=5, dropout=0.1),
-            nn.Conv2d(20 * mult, 20 * mult, kernel_size=(5, 5),
-                      groups=(20 * mult), padding=(0, 2)),
-            nn.Conv2d(20 * mult, num_classes, kernel_size=(1, 1))
+            nn.Conv2d(20 * self.mult, 20 * self.mult, kernel_size=(5, 5),
+                      groups=(20 * self.mult), padding=(0, 2)),
         )
+
+        self.head = None
+        if cfg.model.head is not None:
+            self.head = Head(cfg.model.head, 20 * self.mult, num_classes)
+
 
     def align(self, wav: torch.Tensor, events: List[Event]) -> torch.Tensor:
         return self.spectrogrammer.align(wav, events)
@@ -136,5 +141,8 @@ class BCResNet(nn.Module):
         return self.spectrogrammer.collate(wavs)
 
     def forward(self, x):
-        spec = self.spectrogrammer(x).transpose(-1, -2)
-        return self.net(spec.unsqueeze(dim=1)).squeeze(dim=2).transpose(-1, -2)
+        x = self.spectrogrammer(x).transpose(-1, -2)
+        x = self.net(x.unsqueeze(dim=1)).squeeze(dim=2).transpose(-1, -2)
+        if self.head is not None:
+            x = self.head(x)
+        return x

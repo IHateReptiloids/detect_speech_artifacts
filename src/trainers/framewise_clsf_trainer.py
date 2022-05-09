@@ -14,9 +14,8 @@ class FramewiseClassificationTrainer:
     def __init__(self, cfg, model_cls, opt_cls, scheduler_cls,
                  device, train_ds, val_ds):
         self.cfg = cfg
-        self.model = model_cls(
-            num_classes=train_ds.NUM_CLASSES, **cfg.model.args
-        ).to(device)
+        self.model = model_cls(cfg, num_classes=train_ds.NUM_CLASSES)\
+            .to(device)
         self.opt = opt_cls(self.model.parameters(), **cfg.opt.args)
         self.device = device
         self.train_ds = train_ds

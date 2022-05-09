@@ -1,3 +1,6 @@
+defaults:
+- head: linear
+
 name: 'bc_resnet'
 args:
   n_fft: 480
