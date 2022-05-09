@@ -14,7 +14,8 @@ def f1_score(pred, y, num_classes):
         pred_i = torch.where(pred == i, 1, 0)
         y_i = torch.where(y == i, 1, 0)
         res[i] = sklearn.metrics.f1_score(y_i.cpu().numpy(),
-                                          pred_i.cpu().numpy())
+                                          pred_i.cpu().numpy(),
+                                          zero_division=0)
     return res.to(pred.device)
 
 

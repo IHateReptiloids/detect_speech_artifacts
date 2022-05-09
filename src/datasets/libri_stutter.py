@@ -36,7 +36,8 @@ class LibriStutter(torch.utils.data.Dataset):
 
         if labels_path is not None:
             with open(labels_path, 'r') as f:
-                self.rel_paths = f.readlines()
+                self.rel_paths = list(map(lambda s: s.rstrip('\n'),
+                                          f.readlines()))
         else:
             self.rel_paths = [p.relative_to(self.audio_dir).with_suffix('')
                               for p in self.audio_dir.glob('*/*/*')]
@@ -44,14 +45,14 @@ class LibriStutter(torch.utils.data.Dataset):
     
     def __getitem__(self, ind):
         p = self.rel_paths[ind]
-        wav, sr = torchaudio.load(self.audio_dir / p.with_suffix('.flac'))
+        wav, sr = torchaudio.load((self.audio_dir / p).with_suffix('.flac'))
         if sr != self.target_sr:
             wav = torchaudio.functional.resample(wav, sr, self.target_sr)
         wav = wav.squeeze().numpy()
         assert wav.ndim == 1
 
         events = []
-        with (self.annotations_dir / p.with_suffix('.csv')).open('r') as f:
+        with ((self.annotations_dir / p).with_suffix('.csv')).open('r') as f:
             for line in f:
                 if line.startswith('STUTTER'):
                     _, start, end, type_ = line.split(',')

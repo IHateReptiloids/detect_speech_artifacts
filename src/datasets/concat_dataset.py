@@ -17,7 +17,10 @@ class ConcatDataset(torch.utils.data.Dataset):
         self.ds = torch.utils.data.ConcatDataset(datasets)
     
     def __getitem__(self, ind):
-        return self.ds[ind]
+        wav, events = self.ds[ind]
+        for event in events:
+            event.label_idx = self.LABEL2IND[event.label]
+        return wav, events
     
     def __len__(self):
         return len(self.ds)
