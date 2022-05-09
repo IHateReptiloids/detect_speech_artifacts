@@ -55,7 +55,7 @@ def main(cfg: DictConfig):
         raise ValueError('Train dataset and validation dataset have ' +\
                          'different number of classes')
 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(cfg.device)
 
     trainer = FramewiseClassificationTrainer(
         cfg, MODELS[cfg.model.name], OPTS[cfg.opt.name],
