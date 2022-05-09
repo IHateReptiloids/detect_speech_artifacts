@@ -1,0 +1,12 @@
+defaults:
+- head: linear
+
+name: 'wav2vec2_bc_resnet'
+args:
+  freeze: true
+  size: 'base'
+
+  n_fft: 480
+  hop_length: 160
+  n_mels: 40
+  mult: 1

@@ -30,7 +30,7 @@ class Wav2Vec2Pretrained(torch.nn.Module):
                 p.requires_grad_(False)
 
         self.head = None
-        if cfg.model.head is not None:
+        if num_classes is not None:
             self.head = Head(cfg.model.head, self.num_features, num_classes)
 
         self.processor = Wav2Vec2Processor.from_pretrained(model_name)

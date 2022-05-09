@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from .head import Head
 from .spectrogrammer import Spectrogrammer
+from .wav2vec2 import Wav2Vec2Pretrained
 from src.datasets import Event
 
 
@@ -130,7 +131,7 @@ class BCResNet(nn.Module):
         )
 
         self.head = None
-        if cfg.model.head is not None:
+        if num_classes is not None:
             self.head = Head(cfg.model.head, 20 * self.mult, num_classes)
 
 
@@ -146,3 +147,18 @@ class BCResNet(nn.Module):
         if self.head is not None:
             x = self.head(x)
         return x
+
+
+class Wav2Vec2BCResNet(Wav2Vec2Pretrained):
+    def __init__(self, cfg, num_classes=None):
+        super().__init__(cfg)
+
+        self.projector = nn.Linear(self.num_features,
+                                   cfg.model.args.n_mels)
+        self.bc_resnet = BCResNet(cfg, num_classes)
+        self.bc_resnet.spectrogrammer = nn.Identity()
+
+    def forward(self, x):
+        x = super().forward(x)
+        x = self.projector(x)
+        return self.bc_resnet(x)
