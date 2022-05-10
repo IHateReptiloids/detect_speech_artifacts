@@ -20,7 +20,9 @@ num_workers: 8
 seed: 8228
 train_batch_size: 16
 val_batch_size: 16
+wandb_entity: "_username_"
 wandb_file_name: null
 wandb_group: ???
 wandb_log_freq: 100
+wandb_project: "diploma"
 wandb_run_path: null

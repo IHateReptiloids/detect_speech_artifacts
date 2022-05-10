@@ -46,7 +46,8 @@ def make_dataset(ds_cfg, target_sr):
 
 @hydra.main(config_path='configs', config_name='config')
 def main(cfg: DictConfig):
-    wandb.init(config=cfg, group=cfg.wandb_group)
+    wandb.init(config=cfg, group=cfg.wandb_group,
+               project=cfg.wandb_project, entity=cfg.wandb_entity)
 
     torch.manual_seed(cfg.seed)
 
