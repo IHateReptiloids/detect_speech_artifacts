@@ -20,6 +20,7 @@ num_workers: 8
 seed: 8228
 train_batch_size: 16
 val_batch_size: 16
+val_log_freq: 1
 wandb_entity: "_username_"
 wandb_file_name: null
 wandb_group: ???

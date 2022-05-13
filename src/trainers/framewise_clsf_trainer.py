@@ -125,7 +125,7 @@ class FramewiseClassificationTrainer:
         total_f1_scores = torch.zeros(self.val_ds.NUM_CLASSES,
                                       device=self.device)
         table = wandb.Table(columns=['wav', 'prediction'])
-        for x, y in tqdm(self.val_loader):
+        for i, (x, y) in enumerate(tqdm(self.val_loader)):
             x = x.to(self.device)
             y = y.to(self.device)
             output = self.model(x)
@@ -137,15 +137,16 @@ class FramewiseClassificationTrainer:
             total_acc += (pred == y).float().mean()
             total_f1_scores += f1_score(pred, y, len(total_f1_scores))
 
-            wav = x[0].cpu().numpy()
-            prediction_img = visualize(
-                wav, pred[0].cpu().numpy(),
-                y[0].cpu().numpy(), self.val_ds.IND2LABEL
-            )
-            table.add_data(
-                wandb.Audio(wav, sample_rate=self.model.INPUT_SR),
-                wandb.Image(prediction_img)
-            )
+            if i % self.cfg.val_log_freq == 0:
+                wav = x[0].cpu().numpy()
+                prediction_img = visualize(
+                    wav, pred[0].cpu().numpy(),
+                    y[0].cpu().numpy(), self.val_ds.IND2LABEL
+                )
+                table.add_data(
+                    wandb.Audio(wav, sample_rate=self.model.INPUT_SR),
+                    wandb.Image(prediction_img)
+                )
 
         val_loss = total_loss.item() / len(self.val_loader)
         val_acc = total_acc.item() / len(self.val_loader)
