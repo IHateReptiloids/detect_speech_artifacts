@@ -89,6 +89,12 @@ class FramewiseClassificationTrainer:
                                    y.flatten())
             self.opt.zero_grad()
             loss.backward()
+
+            grad_norm = torch.zeros(1, device=self.device)
+            for p in self.model.parameters():
+                grad_norm += (p.grad.detach() ** 2).sum()
+            grad_norm = torch.sqrt(grad_norm)
+
             self.opt.step()
             self.scheduler.step()
 
@@ -96,13 +102,14 @@ class FramewiseClassificationTrainer:
             acc = (output.argmax(dim=-1) == y).float().mean()
             total_acc += acc
 
-            data = {
-                'train/loss': loss.detach(),
+            wandb_data = {
+                'train/grad_norm': grad_norm.item(),
+                'train/loss': loss.item(),
                 'train/accuracy': acc,
                 'train/lr': self.opt.param_groups[0]['lr']
             }
             wandb.log(
-                data=data,
+                data=wandb_data,
                 step=self._num_iter,
                 commit=(self._num_iter % 10 == 0)
             )
