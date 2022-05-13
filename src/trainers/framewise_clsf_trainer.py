@@ -92,7 +92,8 @@ class FramewiseClassificationTrainer:
 
             grad_norm = torch.zeros(1, device=self.device)
             for p in self.model.parameters():
-                grad_norm += (p.grad.detach() ** 2).sum()
+                if p.grad is not None:
+                    grad_norm += (p.grad.detach() ** 2).sum()
             grad_norm = torch.sqrt(grad_norm)
 
             self.opt.step()
