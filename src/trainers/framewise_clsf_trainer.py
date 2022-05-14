@@ -96,6 +96,10 @@ class FramewiseClassificationTrainer:
                     grad_norm += (p.grad.detach() ** 2).sum()
             grad_norm = torch.sqrt(grad_norm)
 
+            if self.cfg.max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(),
+                                               self.cfg.max_grad_norm)
+
             self.opt.step()
             self.scheduler.step()
 
