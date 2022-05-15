@@ -90,10 +90,15 @@ class FramewiseClassificationTrainer:
             self.opt.zero_grad()
             loss.backward()
 
+            grad_norm = torch.zeros(1, device=self.device)
+            for p in self.model.parameters():
+                if p.grad is not None:
+                    grad_norm += (p.grad.detach() ** 2).sum()
+            grad_norm = torch.sqrt(grad_norm)
+
             if self.cfg.max_grad_norm is not None:
-                grad_norm = torch.nn.utils.clip_grad_norm_(
-                    self.model.parameters(), self.cfg.max_grad_norm
-                )
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(),
+                                               self.cfg.max_grad_norm)
 
             self.opt.step()
             self.scheduler.step()
@@ -103,7 +108,7 @@ class FramewiseClassificationTrainer:
             total_acc += acc
 
             wandb_data = {
-                'train/grad_norm': grad_norm,
+                'train/grad_norm': grad_norm.item(),
                 'train/loss': loss.item(),
                 'train/accuracy': acc,
                 'train/lr': self.opt.param_groups[0]['lr']
